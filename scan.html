@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Puerta · Check-in de la fiesta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+  :root{--bg:#170E22;--surface:#28193B;--line:#432E5E;--pink:#F5479A;--lilac:#C6A6F2;
+    --text:#F6EEFB;--muted:#B6A3CC;--faint:#8A76A3;
+    --go:#3ED598;--go-ink:#06301F;--no:#FB6E7E;--no-ink:#3A0710;--warn:#F7B955;--warn-ink:#3A2606;--r:16px;--rs:11px}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:'Instrument Sans',system-ui,sans-serif;color:var(--text);
+    background:radial-gradient(1200px 600px at 50% -10%,#2A1740,var(--bg) 60%);min-height:100vh;line-height:1.5}
+  .wrap{max-width:520px;margin:0 auto;padding:0 16px 40px}
+  header{padding:26px 4px 12px;text-align:center}
+  .brand{font-family:'Fraunces',serif;font-weight:900;font-size:26px;letter-spacing:-.5px}
+  .brand .s{color:var(--pink)}.tag{color:var(--muted);font-size:13px;margin-top:4px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 3px}
+  .sub{margin:0 0 13px;color:var(--muted);font-size:13px}
+  input{width:100%;background:#1F1330;border:1px solid var(--line);color:var(--text);
+    font-family:inherit;font-size:15px;padding:12px 13px;border-radius:var(--rs);outline:none}
+  input:focus{border-color:var(--pink)}::placeholder{color:var(--faint)}
+  .btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;border:0;border-radius:var(--rs);
+    font-family:inherit;font-size:15px;font-weight:600;padding:13px;cursor:pointer;margin-top:12px;background:var(--pink);color:#fff}
+  #reader{width:100%;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:#000;min-height:60px}
+  .hint{text-align:center;color:var(--muted);font-size:13px;margin-top:12px}
+  .tiny{font-size:12px;color:var(--faint);text-align:center;margin-top:4px}
+  .gate{max-width:360px;margin:60px auto;text-align:center}
+  .flash{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}
+  .flash.show{display:flex;animation:fl .18s ease}
+  @keyframes fl{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  .ico{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:22px;background:rgba(0,0,0,.12)}
+  .ico svg{width:54px;height:54px;stroke-width:3;fill:none}
+  .big{font-family:'Fraunces',serif;font-weight:900;font-size:38px;line-height:1.05}
+  .who{font-size:20px;font-weight:600;margin-top:10px}.note{font-size:14px;margin-top:8px;opacity:.85}
+  .flash.go{background:var(--go);color:var(--go-ink)}.flash.go .ico svg{stroke:var(--go-ink)}
+  .flash.no{background:var(--no);color:var(--no-ink)}.flash.no .ico svg{stroke:var(--no-ink)}
+  .flash.warn{background:var(--warn);color:var(--warn-ink)}.flash.warn .ico svg{stroke:var(--warn-ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Puerta <span class="s">✦</span></div>
+    <div class="tag">Escanea las entradas</div>
+  </header>
+
+  <div class="gate card" id="gate">
+    <h2>Clave de la puerta</h2>
+    <p class="sub">Pídesela al organizador. Es la clave <code>DOOR_KEY</code>.</p>
+    <input type="password" id="doorKey" placeholder="Clave de la puerta">
+    <button class="btn" id="enterBtn">Entrar</button>
+    <p class="tiny" id="gateMsg"></p>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="card">
+      <h2>Escáner</h2>
+      <p class="sub">Apunta al QR del invitado. El servidor decide y el resultado sale en grande.</p>
+      <div id="reader"></div>
+      <button class="btn" id="toggle"><span id="lbl">Iniciar cámara</span></button>
+      <p class="hint" id="hint">La cámara necesita un enlace seguro (https).</p>
+    </div>
+  </div>
+</div>
+
+<div class="flash" id="flash">
+  <div class="ico" id="ico"></div>
+  <div class="big" id="big"></div>
+  <div class="who" id="who"></div>
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+const ICO={
+  go:'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>',
+  no:'<svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  warn:'<svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'
+};
+let KEY = sessionStorage.getItem("doorKey") || "";
+
+document.getElementById("enterBtn").onclick = tryEnter;
+document.getElementById("doorKey").addEventListener("keydown",e=>{ if(e.key==="Enter") tryEnter(); });
+async function tryEnter(){
+  KEY = document.getElementById("doorKey").value.trim();
+  // probamos la clave con un token vacío: si la clave está mal, da 401
+  const r = await fetch("/api/verify",{ method:"POST",
+    headers:{ "Content-Type":"application/json","x-door-key":KEY }, body: JSON.stringify({token:"x"}) });
+  if(r.status===401){ document.getElementById("gateMsg").textContent="Clave incorrecta 🌸"; return; }
+  sessionStorage.setItem("doorKey", KEY);
+  document.getElementById("gate").style.display="none";
+  document.getElementById("app").style.display="block";
+  if(location.protocol==="https:"||location.hostname==="localhost")
+    document.getElementById("hint").textContent='Toca "Iniciar cámara" y apunta al QR ✦';
+}
+
+let scanner=null, scanning=false, lastText=null, lastTime=0, busy=false;
+document.getElementById("toggle").onclick=()=> scanning?stop():start();
+function start(){
+  scanner=new Html5Qrcode("reader");
+  scanner.start({facingMode:"environment"},{fps:12,qrbox:{width:230,height:230}}, onScan, ()=>{})
+  .then(()=>{ scanning=true; document.getElementById("lbl").textContent="Detener cámara";
+    document.getElementById("hint").textContent="Apunta al QR del invitado ✦"; })
+  .catch(()=>{ document.getElementById("hint").textContent="No se pudo abrir la cámara. Revisa permisos y que estés en https."; });
+}
+function stop(){ if(scanner&&scanning) scanner.stop().then(()=>scanner.clear()).catch(()=>{});
+  scanning=false; document.getElementById("lbl").textContent="Iniciar cámara"; }
+
+async function onScan(text){
+  const now=Date.now();
+  if(busy) return;
+  if(text===lastText && now-lastTime<3000) return; // evita doble lectura del mismo código
+  lastText=text; lastTime=now; busy=true;
+  try{
+    const r=await fetch("/api/verify",{ method:"POST",
+      headers:{ "Content-Type":"application/json","x-door-key":KEY }, body: JSON.stringify({token:text}) });
+    const d=await r.json();
+    if(d.result==="ok"){ flash("go","¡Bienvenida!",d.name,"Que la disfrutes 💗"); buzz([200]); }
+    else if(d.result==="used"){ flash("warn","Ya ingresó",d.name,"Entró "+timeAgo(d.used_at)); buzz([120,80,120]); }
+    else { flash("no","No válido","",d.reason||"QR no reconocido"); buzz([80,60,80]); }
+  }catch(e){ flash("no","Sin conexión","","Revisa el internet"); }
+  setTimeout(()=>{ busy=false; }, 1500);
+}
+function flash(kind,big,who,note){
+  const f=document.getElementById("flash");
+  f.className="flash show "+kind;
+  document.getElementById("ico").innerHTML=ICO[kind];
+  document.getElementById("big").textContent=big;
+  document.getElementById("who").textContent=who||"";
+  document.getElementById("note").textContent=note||"";
+  clearTimeout(flash._t); flash._t=setTimeout(()=>f.classList.remove("show"),2400);
+}
+function buzz(p){ if(navigator.vibrate) navigator.vibrate(p); }
+function timeAgo(t){ if(!t)return""; const s=Math.floor((Date.now()-t)/1000);
+  if(s<60)return"hace un momento"; const m=Math.floor(s/60); if(m<60)return"hace "+m+" min";
+  return new Date(t).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}); }
+
+if(KEY){ tryEnter(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Check-in de la fiesta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{--bg:#170E22;--surface:#28193B;--surface2:#33234A;--line:#432E5E;--pink:#F5479A;
+    --pink-soft:#F58FC2;--lilac:#C6A6F2;--text:#F6EEFB;--muted:#B6A3CC;--faint:#8A76A3;
+    --go:#3ED598;--no:#FB6E7E;--r:16px;--rs:11px}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:'Instrument Sans',system-ui,sans-serif;color:var(--text);
+    background:radial-gradient(1200px 600px at 50% -10%,#2A1740,var(--bg) 60%);min-height:100vh;line-height:1.5}
+  .wrap{max-width:540px;margin:0 auto;padding:0 16px 60px}
+  header{padding:26px 4px 12px;text-align:center}
+  .brand{font-family:'Fraunces',serif;font-weight:900;font-size:28px;letter-spacing:-.5px}
+  .brand .s{color:var(--pink)}
+  .tag{color:var(--muted);font-size:13px;margin-top:4px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 3px}
+  .sub{margin:0 0 13px;color:var(--muted);font-size:13px}
+  label.lbl{display:block;font-size:12px;color:var(--lilac);font-weight:600;margin:0 0 6px}
+  input,textarea{width:100%;background:#1F1330;border:1px solid var(--line);color:var(--text);
+    font-family:inherit;font-size:15px;padding:12px 13px;border-radius:var(--rs);outline:none}
+  input:focus,textarea:focus{border-color:var(--pink)}
+  textarea{resize:vertical;min-height:92px}
+  ::placeholder{color:var(--faint)}
+  .btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;border:0;border-radius:var(--rs);
+    font-family:inherit;font-size:15px;font-weight:600;padding:13px;cursor:pointer;margin-top:12px}
+  .btn.pink{background:var(--pink);color:#fff}.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--lilac);margin-top:0}
+  .btn.mini{width:auto;padding:8px 13px;font-size:13px;margin:0}
+  .row{display:flex;gap:8px}.row .btn{margin-top:0}
+  .count{display:flex;gap:10px;margin-bottom:14px}
+  .stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px;text-align:center}
+  .stat .n{font-family:'Fraunces',serif;font-weight:900;font-size:26px;line-height:1}
+  .stat .l{font-size:11px;color:var(--muted);margin-top:5px}
+  .stat.i .n{color:var(--go)}.stat.p .n{color:var(--pink-soft)}.stat.t .n{color:var(--lilac)}
+  .guest{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #3A2851}
+  .guest:last-child{border-bottom:0}.g{flex:1;min-width:0}
+  .nm{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .st{font-size:12px;color:var(--faint);margin-top:2px}.st.ok{color:var(--go)}
+  .qbtn{background:var(--surface2);border:1px solid var(--line);color:var(--lilac);width:38px;height:38px;
+    border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .qbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .empty{text-align:center;color:var(--faint);padding:24px;font-size:14px}
+  .tiny{font-size:12px;color:var(--faint);text-align:center;margin-top:4px}
+  .danger{color:var(--no)!important;border-color:rgba(251,110,126,.4)!important}
+  .gate{max-width:360px;margin:60px auto;text-align:center}
+  .modal{position:fixed;inset:0;z-index:90;background:rgba(10,6,16,.75);display:none;align-items:center;justify-content:center;padding:24px}
+  .modal.show{display:flex}
+  .mbox{background:#fff;border-radius:20px;padding:24px;text-align:center;max-width:320px;width:100%}
+  .mn{color:#1a1024;font-family:'Fraunces',serif;font-weight:900;font-size:22px;margin:0 0 4px}
+  .ms{color:#7a6a8c;font-size:12px;margin:0 0 16px}#qbox{display:flex;justify-content:center;margin-bottom:16px}
+  #qbox img,#qbox canvas{border-radius:8px}
+  .mrow{display:flex;gap:8px}.mbtn2{flex:1;border:0;border-radius:10px;padding:11px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
+  .mbtn2.p{background:var(--pink);color:#fff}.mbtn2.g{background:#efe7f6;color:#5a4770}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Panel de admin <span class="s">✦</span></div>
+    <div class="tag" id="tag">Verificación segura con QR</div>
+  </header>
+
+  <!-- puerta de acceso -->
+  <div class="gate card" id="gate">
+    <h2>Clave de administrador</h2>
+    <p class="sub">Solo tú entras aquí. Es la clave <code>ADMIN_KEY</code> de tu servidor.</p>
+    <input type="password" id="adminKey" placeholder="Tu clave de admin">
+    <button class="btn pink" id="enterBtn">Entrar</button>
+    <p class="tiny" id="gateMsg"></p>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="count">
+      <div class="stat i"><div class="n" id="cIn">0</div><div class="l">Entraron</div></div>
+      <div class="stat p"><div class="n" id="cPend">0</div><div class="l">Faltan</div></div>
+      <div class="stat t"><div class="n" id="cTot">0</div><div class="l">Total</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Agregar invitados</h2>
+      <p class="sub">Un nombre por línea. Se guardan en la base de datos y se les genera su QR firmado.</p>
+      <textarea id="names" placeholder="Sofía Martínez&#10;Cami&#10;Valentina R."></textarea>
+      <button class="btn pink" id="addBtn">Agregar a la base de datos</button>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 style="margin:0">Invitados</h2>
+        <div class="row" style="gap:6px">
+          <button class="btn ghost mini" id="refreshBtn">Actualizar</button>
+          <button class="btn ghost mini" id="printBtn">Imprimir QR</button>
+        </div>
+      </div>
+      <p class="sub">Toca el QR de cada quien para enviárselo.</p>
+      <div id="list"><div class="empty">Cargando...</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Herramientas</h2>
+      <div class="row">
+        <button class="btn ghost" id="exportBtn">Exportar CSV</button>
+        <button class="btn ghost danger" id="resetBtn">Borrar todo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="mbox">
+  <div class="mn" id="mName"></div><div class="ms">Escanéalo en la puerta</div>
+  <div id="qbox"></div>
+  <div class="mrow"><button class="mbtn2 p" id="mDl">Descargar</button><button class="mbtn2 g" id="mClose">Cerrar</button></div>
+</div></div>
+
+<script>
+let KEY = sessionStorage.getItem("adminKey") || "";
+let guests = [];
+
+const api = (p, opts={}) => fetch(p, {
+  ...opts,
+  headers: { "Content-Type":"application/json", "x-admin-key": KEY, ...(opts.headers||{}) }
+});
+
+document.getElementById("enterBtn").onclick = tryEnter;
+document.getElementById("adminKey").addEventListener("keydown", e=>{ if(e.key==="Enter") tryEnter(); });
+async function tryEnter(){
+  KEY = document.getElementById("adminKey").value.trim();
+  const r = await api("/api/admin/guests");
+  if(r.ok){ sessionStorage.setItem("adminKey", KEY); showApp(); load(); }
+  else document.getElementById("gateMsg").textContent = "Clave incorrecta 🌸";
+}
+function showApp(){ document.getElementById("gate").style.display="none"; document.getElementById("app").style.display="block"; }
+
+async function load(){
+  const r = await api("/api/admin/guests");
+  if(!r.ok) return;
+  const d = await r.json();
+  guests = d.guests;
+  document.getElementById("cIn").textContent = d.used;
+  document.getElementById("cPend").textContent = d.pending;
+  document.getElementById("cTot").textContent = d.total;
+  render();
+}
+function render(){
+  const box = document.getElementById("list");
+  if(!guests.length){ box.innerHTML='<div class="empty">Aún no hay invitados 💗</div>'; return; }
+  box.innerHTML="";
+  guests.forEach(g=>{
+    const d=document.createElement("div"); d.className="guest";
+    const inn = g.status==="used";
+    d.innerHTML=`<div class="g"><div class="nm">${esc(g.name)}</div>
+      <div class="st ${inn?'ok':''}">${inn?'✓ Ingresó':'Pendiente'}</div></div>
+      <button class="qbtn"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v3M17 20h4M20 20v1"/></svg></button>`;
+    d.querySelector(".qbtn").onclick=()=>showQR(g);
+    box.appendChild(d);
+  });
+}
+
+document.getElementById("addBtn").onclick = async ()=>{
+  const names = document.getElementById("names").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!names.length){ alert("Escribe al menos un nombre"); return; }
+  const r = await api("/api/admin/guests",{ method:"POST", body: JSON.stringify({names}) });
+  if(r.ok){ document.getElementById("names").value=""; load(); }
+};
+document.getElementById("refreshBtn").onclick = load;
+document.getElementById("resetBtn").onclick = async ()=>{
+  if(!confirm("¿Borrar TODA la lista y los ingresos? No se puede deshacer.")) return;
+  await api("/api/admin/reset",{ method:"POST" }); load();
+};
+document.getElementById("exportBtn").onclick = ()=>{
+  let csv="Nombre,Estado,Hora\n";
+  guests.forEach(g=>{ csv+=`"${g.name.replace(/"/g,'""')}",${g.status==='used'?'Ingresó':'Pendiente'},${g.used_at?new Date(g.used_at).toLocaleString():''}\n`; });
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="invitados.csv"; a.click();
+};
+
+// QR modal
+let curName="";
+function showQR(g){
+  curName=g.name;
+  document.getElementById("mName").textContent=g.name;
+  const qb=document.getElementById("qbox"); qb.innerHTML="";
+  new QRCode(qb,{ text:g.token, width:220, height:220, colorDark:"#170E22", colorLight:"#fff", correctLevel:QRCode.CorrectLevel.M });
+  document.getElementById("modal").classList.add("show");
+}
+document.getElementById("mClose").onclick=()=>document.getElementById("modal").classList.remove("show");
+document.getElementById("modal").onclick=e=>{ if(e.target.id==="modal") document.getElementById("modal").classList.remove("show"); };
+document.getElementById("mDl").onclick=()=>{
+  const c=document.querySelector("#qbox canvas"),img=document.querySelector("#qbox img");
+  let url; if(c)url=c.toDataURL("image/png"); else if(img)url=img.src; else return;
+  const a=document.createElement("a"); a.href=url; a.download="QR-"+curName.replace(/[^a-z0-9]/gi,"_")+".png"; a.click();
+};
+
+// Imprimir todos
+document.getElementById("printBtn").onclick=()=>{
+  if(!guests.length){ alert("No hay invitados."); return; }
+  const w=window.open("","_blank");
+  const data=guests.map(g=>({n:g.name,t:g.token}));
+  w.document.write(`<html><head><title>QR fiesta</title><style>
+    body{font-family:sans-serif;padding:20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .c{border:1px solid #ddd;border-radius:10px;padding:14px;text-align:center;page-break-inside:avoid}
+    .nm{font-weight:700;font-size:14px;margin-top:8px}</style></head><body>
+    <h1>Entradas</h1><div class="grid" id="g"></div>
+    <scr`+`ipt src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></scr`+`ipt>
+    <scr`+`ipt>const d=${JSON.stringify(data)};const g=document.getElementById('g');
+    d.forEach(x=>{const c=document.createElement('div');c.className='c';const q=document.createElement('div');
+    c.appendChild(q);const n=document.createElement('div');n.className='nm';n.textContent=x.n;c.appendChild(n);g.appendChild(c);
+    new QRCode(q,{text:x.t,width:150,height:150});});setTimeout(()=>print(),700);</scr`+`ipt></body></html>`);
+  w.document.close();
+};
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// auto-login si ya había clave guardada
+if(KEY){ tryEnter(); }
+</script>
+</body>
+</html>
