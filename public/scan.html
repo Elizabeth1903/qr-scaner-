@@ -120,7 +120,7 @@ async function onScan(text){
     const r=await fetch("/api/verify",{ method:"POST",
       headers:{ "Content-Type":"application/json","x-door-key":KEY }, body: JSON.stringify({token:text}) });
     const d=await r.json();
-    if(d.result==="ok"){ flash("go","¡Bienvenida!",d.name,"Que la disfrutes 💗"); buzz([200]); }
+    if(d.result==="ok"){ flash("go","¡Bienvenid@!",d.name,"Que la disfrutes 💗"); buzz([200]); }
     else if(d.result==="used"){ flash("warn","Ya ingresó",d.name,"Entró "+timeAgo(d.used_at)); buzz([120,80,120]); }
     else { flash("no","No válido","",d.reason||"QR no reconocido"); buzz([80,60,80]); }
   }catch(e){ flash("no","Sin conexión","","Revisa el internet"); }
